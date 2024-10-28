@@ -2,9 +2,9 @@ package com.codeZero.photoMap.common;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import lombok.Getter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -12,19 +12,17 @@ import java.time.LocalDateTime;
 @Getter
 public abstract class BaseEntity {
 
+    @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdDate;
 
+    @LastModifiedDate
     private LocalDateTime updatedDate;
 
-    @PrePersist
-    protected void onCreate() {
-        createdDate = LocalDateTime.now();
-    }
+    private boolean isDeleted = false;
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedDate = LocalDateTime.now();
+    public void delete() {
+        isDeleted = true;
     }
 
 }

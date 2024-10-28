@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: photoMap
+  output:
+    ansi:
+      enabled: always
+# H2
+  datasource:
+    driverClassName: org.h2.Driver
+    password: ''
+    username: sa
+    url: jdbc:h2:mem:~/photomap
+  h2:
+    console:
+      path: /h2-console
+      enabled: 'true'
+
+# S3
+# TODO: ADD S3 KEYS AND BUCKET NAME
+#cloud:
+#  aws:
+#    s3:
+#      bucket: ${AWS_S3_BUCKET}
+#    credentials:
+#      accessKey: ${AWS_S3_ACCESS_KEY}
+#      secretKey: ${AWS_S3_SECRET_KEY}
+#    stack:
+#      auto-: 'false'
+#    region:
+#      static: ap-northeast-2
