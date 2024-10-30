@@ -1,11 +1,11 @@
 package com.codeZero.photoMap.controller.group;
 
+import com.codeZero.photoMap.common.ApiResponse;
 import com.codeZero.photoMap.dto.group.request.GroupCreateRequest;
 import com.codeZero.photoMap.dto.group.request.GroupUpdateRequest;
 import com.codeZero.photoMap.dto.group.response.GroupResponse;
 import com.codeZero.photoMap.service.group.GroupService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,46 +22,46 @@ public class GroupController {
 
     /**
      * 그룹 생성 API
-     *
-     * @param request 그룹 생성 요청 DTO
-     * @return
+     * @param request
+     * @param memberId
+     * @return ApiResponse<GroupResponse> 생성된 그룹 응답 DTO
      */
     @PostMapping
-    public ResponseEntity<GroupResponse> createGroup(
+    public ApiResponse<GroupResponse> createGroup(
             @RequestBody GroupCreateRequest request,
             @RequestParam Long memberId
     ) {
         GroupResponse response = groupService.createGroup(request, memberId);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ApiResponse.ok(response);
     }
 
     /**
      * 그룹 조회 API(로그인한 멤버가 가진 그룹 조회)
      * @param memberId 로그인한 멤버Id
-     * @return
+     * @return ApiResponse<List<GroupResponse>> 로그인한 멤버가 속한 모든 그룹 응답 DTO 목록
      */
     @GetMapping
-    public ResponseEntity<List<GroupResponse>> getGroupByMember(
+    public ApiResponse<List<GroupResponse>> getGroupByMember(
             @RequestParam Long memberId
     ) {
         List<GroupResponse> responses = groupService.getGroupByMember(memberId);
-        return ResponseEntity.ok(responses);
+        return ApiResponse.ok(responses);
     }
 
     /**
      * 그룹 조회 API(하나의 그룹이 가진 그룹정보,멤버 조회)
      *
      * @param groupId 조회할 그룹Id
-     * @return
+     * @return ApiResponse<GroupResponse> 요청 그룹의 정보와 멤버 목록 응답 DTO
      */
     @GetMapping("/{groupId}")
-    public ResponseEntity<GroupResponse> getGroup(
+    public ApiResponse<GroupResponse> getGroup(
             @PathVariable Long groupId
     ) {
         GroupResponse response = groupService.getGroup(groupId);
 
-        return ResponseEntity.ok(response);
+        return ApiResponse.ok(response);
     }
 
     /**
@@ -69,17 +69,28 @@ public class GroupController {
      *
      * @param groupId 수정할 그룹Id
      * @param request 그룹 수정 요청 DTO
-     * @return
+     * @return ApiResponse<GroupResponse> 수정된 그룹 정보 응답 DTO
      */
     @PatchMapping("/{groupId}")
-    public ResponseEntity<GroupResponse> updateGroup(
+    public ApiResponse<GroupResponse> updateGroup(
             @PathVariable Long groupId,
             @RequestBody GroupUpdateRequest request
     ) {
         GroupResponse response = groupService.updateGroup(groupId, request);
 
-        return ResponseEntity.ok(response);
+        return ApiResponse.ok(response);
 
+    }
+
+    /**
+     * 그룹 소프트 삭제 API
+     * @param groupId 삭제할 그룹 ID
+     * @return ApiResponse<GroupResponse> 삭제된 그룹 정보 응답 DTO(HTTPStatus 204)
+     */
+    @PatchMapping("/{groupId}/delete")
+    public ApiResponse<GroupResponse> deleteGroup(@PathVariable Long groupId) {
+        GroupResponse response = groupService.deleteGroup(groupId);
+        return ApiResponse.of(HttpStatus.NO_CONTENT, response);
     }
 
 //    /**
@@ -90,12 +101,12 @@ public class GroupController {
 //     * @return
 //     */
 //    @PostMapping("/{groupId}/members/{memberId}")
-//    public ResponseEntity<Void> addMemberToGroup(
+//    public ApiResponse<Void> addMemberToGroup(
 //            @PathVariable Long groupId,
 //            @PathVariable Long memberId
 //    ) {
 //        groupService.addMemberToGroup(groupId, memberId);
-//        return ResponseEntity.status(HttpStatus.CREATED).build();
+//        return ApiResponse.of(HttpStatus.CREATED,null);
 //    }
 //
 //    /**
@@ -106,11 +117,11 @@ public class GroupController {
 //     * @return
 //     */
 //    @DeleteMapping("/{groupId}/members/{memberId}")
-//    public ResponseEntity<Void> removeMemberFromGroup(
+//    public ApiResponse<Void> removeMemberFromGroup(
 //            @PathVariable Long groupId,
 //            @PathVariable Long memberId
 //    ) {
 //        groupService.removeMemberFromGroup(groupId, memberId);
-//        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+//        return ApiResponse.of(HttpStatus.NO_CONTENT,null);
 //    }
 }

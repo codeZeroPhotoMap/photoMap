@@ -5,19 +5,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@ControllerAdvice   //전역 예외 처리기
+//@ControllerAdvice
+@RestControllerAdvice   //전역 예외 처리기
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(MemberNotFoundException.class)
-    public ResponseEntity<String> handleMemberNotFoundException(MemberNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
-
-    @ExceptionHandler(GroupNotFoundException.class)
-    public ResponseEntity<String> handleGroupNotFoundException(GroupNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
 
     // 403 forbidden error: 해당 엔티티에 속해 있지 않는 경우 사용 (예 - 찾은 그룹이 사용자가 속한 그룹이 아닌 경우)
     @ExceptionHandler(ForbiddenException.class)

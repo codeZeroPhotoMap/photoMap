@@ -16,6 +16,10 @@ public class MemberGroupMapping extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     @ManyToOne
     @JoinColumn(name = "group_id")
     private MemberGroup memberGroup;
@@ -25,9 +29,11 @@ public class MemberGroupMapping extends BaseEntity {
     private Member member;
 
     @Builder
-    public MemberGroupMapping(MemberGroup memberGroup, Member member) {
+    public MemberGroupMapping(MemberGroup memberGroup, Member member, Role role) {
 
         this.memberGroup = memberGroup;
         this.member = member;
+        this.role = role;
+
     }
 }

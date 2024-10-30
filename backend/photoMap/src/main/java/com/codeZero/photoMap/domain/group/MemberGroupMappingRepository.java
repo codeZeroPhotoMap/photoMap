@@ -9,9 +9,13 @@ import java.util.List;
 
 public interface MemberGroupMappingRepository extends JpaRepository<MemberGroupMapping, Long> {
 
-    // 특정 그룹에 속한 멤버들을 조회하는 쿼리 ...
+    //  특정 그룹에 속한 소프트 삭제되지 않은 MemberGroupMapping 엔티티 조회
+    List<MemberGroupMapping> findByMemberGroupIdAndIsDeletedFalse(Long groupId);
+
+    //특정 그룹 ID를 기준으로 해당 그룹에 속한 Member 엔티티들 조회
     @Query("SELECT mgm.member FROM MemberGroupMapping mgm WHERE mgm.memberGroup.id = :groupId")
-    List<Member> findMembersByGroupId(@Param("groupId") Long groupId);
+    List<Member> findMembersByGroupIdIsDeletedFalse(@Param("groupId") Long groupId);
+
 
     // memberId로 해당 멤버가 속한 그룹들의 ID를 조회
     List<Long> findGroupIdsByMemberId(Long memberId);
