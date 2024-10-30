@@ -58,5 +58,20 @@ public class MemberGroup extends BaseEntity {
         }
     }
 
+    /**
+     * 맴버 추가 메서드(그룹 생성시 필요)
+     * @param member
+     * @param role
+     */
+    public void addMemberWithRole(Member member, Role role) {
+        MemberGroupMapping memberGroupMapping = MemberGroupMapping.builder()
+                .memberGroup(this)
+                .member(member)
+                .role(role)
+                .build();
+        this.members.add(memberGroupMapping);
+        member.getGroups().add(memberGroupMapping);
+    }
+
 }
 

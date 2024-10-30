@@ -35,12 +35,12 @@ public class GroupResponse {
                 .build();
     }
 
-    //members 없이 MemberGroup만 처리(보류) - 멤버리스트가 null인게 보기안좋음
-//    public static GroupResponse from(MemberGroup memberGroup) {
-//        return GroupResponse.builder()
-//                .id(memberGroup.getId())
-//                .name(memberGroup.getGroupName())
-//                .build();
-//    }
+    //멤버리스트 없이 그룹만 처리
+    public static GroupResponse of(MemberGroup memberGroup) {
+        return GroupResponse.builder()
+                .id(memberGroup.getId())
+                .name(memberGroup.getGroupName())
+                .build();
+    }
 
 }
