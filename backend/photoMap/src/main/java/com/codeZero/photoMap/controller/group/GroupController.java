@@ -4,8 +4,10 @@ import com.codeZero.photoMap.common.ApiResponse;
 import com.codeZero.photoMap.dto.group.request.GroupCreateRequest;
 import com.codeZero.photoMap.dto.group.request.GroupUpdateRequest;
 import com.codeZero.photoMap.dto.group.response.GroupResponse;
+import com.codeZero.photoMap.security.CustomUserDetails;
 import com.codeZero.photoMap.service.group.GroupService;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,14 +25,16 @@ public class GroupController {
     /**
      * 그룹 생성 API
      * @param request
-     * @param memberId
+     * @param userDetails 인증된 사용자의 정보가 포함된 객체(토큰에서 추출된 로그인한 사용자 정보)
      * @return ApiResponse<GroupResponse> 생성된 그룹 응답 DTO
      */
     @PostMapping
     public ApiResponse<GroupResponse> createGroup(
             @RequestBody GroupCreateRequest request,
-            @RequestParam Long memberId
+            @AuthenticationPrincipal CustomUserDetails userDetails  //토큰에서 memberId추출
     ) {
+
+        Long memberId = userDetails.getId();
         GroupResponse response = groupService.createGroup(request, memberId);
 
         return ApiResponse.ok(response);
@@ -38,14 +42,16 @@ public class GroupController {
 
     /**
      * 그룹 조회 API(로그인한 멤버가 가진 그룹 조회)
-     * @param memberId 로그인한 멤버Id
+     * @param userDetails 인증된 사용자의 정보가 포함된 객체(토큰에서 추출된 로그인한 사용자 정보)
      * @return ApiResponse<List<GroupResponse>> 로그인한 멤버가 속한 모든 그룹 응답 DTO 목록
      */
     @GetMapping
     public ApiResponse<List<GroupResponse>> getGroupByMember(
-            @RequestParam Long memberId
+            @AuthenticationPrincipal CustomUserDetails userDetails  //토큰에서 memberId추출
     ) {
+        Long memberId = userDetails.getId();
         List<GroupResponse> responses = groupService.getGroupByMember(memberId);
+
         return ApiResponse.ok(responses);
     }
 

@@ -15,6 +15,9 @@ spring:
       path: /h2-console
       enabled: 'true'
 
+jwt:
+  secret-key: "123YourFixedSecretKeyYourFixedSecretKey123"
+
 # S3
 # TODO: ADD S3 KEYS AND BUCKET NAME
 #cloud:

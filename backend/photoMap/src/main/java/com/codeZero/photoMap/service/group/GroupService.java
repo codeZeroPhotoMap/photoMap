@@ -1,5 +1,6 @@
 package com.codeZero.photoMap.service.group;
 
+import com.codeZero.photoMap.common.exception.ForbiddenException;
 import com.codeZero.photoMap.common.exception.NotFoundException;
 import com.codeZero.photoMap.domain.group.*;
 import com.codeZero.photoMap.domain.member.Member;
@@ -37,6 +38,7 @@ public class GroupService {
     public GroupResponse createGroup(GroupCreateRequest request, Long memberId) {
         MemberGroup group = MemberGroup.builder()
                 .groupName(request.getGroupName())
+                .ownerId(memberId)
                 .build();
 
         MemberGroup savedGroup = memberGroupRepository.save(group);
@@ -44,7 +46,7 @@ public class GroupService {
         //그룹을 생성한 멤버 추가
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException("Member를 찾을 수 없습니다."));
-        savedGroup.addMemberWithRole(member, Role.ADMIN);   //생성한 멤버에 ADIMIN역할 추가
+        savedGroup.addMemberWithRole(member, Role.OWNER);   //생성한 멤버에 ADIMIN역할 추가
 
         return GroupResponse.from(savedGroup, List.of(member));
     }
@@ -123,13 +125,18 @@ public class GroupService {
         MemberGroup group = memberGroupRepository.findByIdAndIsDeletedFalse(groupId)
                 .orElseThrow(() -> new NotFoundException("Group을 찾을 수 없습니다."));
 
+        //나만의 그룹(isPersonal이 true)일 경우 삭제 방지
+        if (group.isPersonal()) {
+            throw new ForbiddenException("나만의 그룹은 삭제할 수 없습니다.");
+        }
+
         group.delete();
 
-        // 그룹에 속한 모든 MemberGroupMapping도 소프트 삭제 처리
+        //그룹에 속한 모든 MemberGroupMapping도 소프트 삭제 처리
         List<MemberGroupMapping> mappings = memberGroupMappingRepository.findByMemberGroupIdAndIsDeletedFalse(groupId);
         for (MemberGroupMapping mapping : mappings) {
-            mapping.delete(); // 각 mapping에 대한 delete() 메서드 호출
-            memberGroupMappingRepository.save(mapping); // 소프트 삭제된 mapping 저장
+            mapping.delete(); //각 mapping에 대한 delete() 메서드 호출
+            memberGroupMappingRepository.save(mapping); //소프트 삭제된 mapping 저장
         }
 
         MemberGroup deletedGroup = memberGroupRepository.save(group);
