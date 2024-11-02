@@ -12,8 +12,4 @@ public class GroupCreateRequest {
     @NotBlank(message = "그룹 이름은 필수입니다.")
     private String groupName;
 
-    @Builder
-    public GroupCreateRequest(String groupName) {
-        this.groupName = groupName;
-    }
 }
