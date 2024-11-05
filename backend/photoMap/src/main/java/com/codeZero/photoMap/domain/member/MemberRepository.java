@@ -9,6 +9,9 @@ import java.util.Optional;
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
+    //이메일로 전체 멤버 조회
+    Optional<Member> findByEmail(String email);
+
     //이메일이 존재하는지 확인(소프트 딜리트 되지 않은 멤버의 이메일)
     boolean existsByEmailAndIsDeletedFalse(String email);
 
