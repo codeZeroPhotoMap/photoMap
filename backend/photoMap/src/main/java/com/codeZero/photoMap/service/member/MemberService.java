@@ -3,9 +3,7 @@ package com.codeZero.photoMap.service.member;
 import com.codeZero.photoMap.common.exception.DuplicateException;
 import com.codeZero.photoMap.common.exception.ForbiddenException;
 import com.codeZero.photoMap.common.exception.NotFoundException;
-import com.codeZero.photoMap.domain.group.MemberGroup;
-import com.codeZero.photoMap.domain.group.MemberGroupRepository;
-import com.codeZero.photoMap.domain.group.Role;
+import com.codeZero.photoMap.domain.group.*;
 import com.codeZero.photoMap.domain.member.Member;
 import com.codeZero.photoMap.domain.member.MemberRepository;
 import com.codeZero.photoMap.domain.member.MemberRole;
@@ -20,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -31,13 +30,15 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberGroupRepository memberGroupRepository;
+    private final MemberGroupMappingRepository memberGroupMappingRepository;
 
 
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, MemberGroupRepository memberGroupRepository) {
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, MemberGroupRepository memberGroupRepository, MemberGroupMappingRepository memberGroupMappingRepository) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.memberGroupRepository = memberGroupRepository;
+        this.memberGroupMappingRepository = memberGroupMappingRepository;
     }
 
     /**
@@ -118,7 +119,7 @@ public class MemberService {
         Optional<Member> existingMember = memberRepository.findByEmail(email);
 
         //TODO : test용, 삭제예정
-        System.out.println("member with email: " + email + " and nickname: " + nickname);    //
+        System.out.println("member with email: " + email + " and nickname: " + nickname);
 
 
         if (existingMember.isPresent()) {
@@ -211,11 +212,31 @@ public class MemberService {
      */
     public void deleteMember(Long memberId) {
 
+        //멤버 조회, 소프트 딜리트
         Member member = findMemberById(memberId);
-
         member.delete();
-
         memberRepository.save(member);
+
+        //그룹장으로 있는 그룹 소프트 딜리트 처리
+        List<MemberGroup> ownedGroups = memberGroupRepository.findByOwnerIdAndIsDeletedFalse(memberId);
+        for (MemberGroup group : ownedGroups) {
+            group.delete();
+            memberGroupRepository.save(group);
+
+            //해당 그룹에 속해 있는 모든 멤버들의 그룹 매핑 소프트 딜리트 처리
+            List<MemberGroupMapping> groupMappings = memberGroupMappingRepository.findByMemberGroupIdAndIsDeletedFalse(group.getId());
+            for (MemberGroupMapping mapping : groupMappings) {
+                mapping.delete();
+                memberGroupMappingRepository.save(mapping);
+            }
+        }
+
+        //멤버로 속해 있는 그룹에서 멤버 그룹 매핑 소프트 딜리트 처리
+        List<MemberGroupMapping> memberMappings = memberGroupMappingRepository.findByMemberIdAndIsDeletedFalse(memberId);
+        for (MemberGroupMapping mapping : memberMappings) {
+            mapping.delete();
+            memberGroupMappingRepository.save(mapping);
+        }
     }
 
     /**
