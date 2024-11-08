@@ -17,7 +17,7 @@ public class LocationResponse {
     public static LocationResponse of(Location location) {
         return LocationResponse.builder()
                 .id(location.getId())
-                .groupId(location.getGroupId())
+                .groupId(location.getMemberGroup().getId())
                 .name(location.getName())
                 .latitude(location.getLatitude())
                 .longitude(location.getLongitude())
