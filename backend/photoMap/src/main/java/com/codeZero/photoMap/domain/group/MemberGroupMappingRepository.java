@@ -18,9 +18,11 @@ public interface MemberGroupMappingRepository extends JpaRepository<MemberGroupM
 
 
     // memberId로 해당 멤버가 속한 그룹들의 ID를 조회
-    List<Long> findGroupIdsByMemberId(Long memberId);
+//    List<Long> findMemberGroupIdsByMemberIdAndIsDeletedFalse(Long memberId);
+    @Query("SELECT m.memberGroup.id FROM MemberGroupMapping m WHERE m.member.id = :memberId AND m.isDeleted = false")
+    List<Long> findGroupIdsByMemberIdAndIsDeletedFalse(@Param("memberId") Long memberId);
     /*
     @Query("SELECT mgm.memberGroup.id FROM MemberGroupMapping mgm WHERE mgm.member.id = :memberId")
-    List<Long> findGroupIdsByMemberId(@Param("memberId") Long memberId);
+    List<Long> findMemberGroupIdsByMemberIdAndIsDeletedFalse(@Param("memberId") Long memberId);
     */
 }

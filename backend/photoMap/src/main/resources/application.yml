@@ -4,30 +4,55 @@ spring:
   output:
     ansi:
       enabled: always
+# SQL test 용도
+#  jpa:
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#        dialect : org.hibernate.dialect.MySQL8Dialect
+
 # H2
+#  datasource:
+#    driverClassName: org.h2.Driver
+#    password: ''
+#    username: sa
+#    url: jdbc:h2:mem:~/photomap
+#  h2:
+#    console:
+#      path: /h2-console
+#      enabled: 'true'
+
+# AWS RDS MySQL
   datasource:
-    driverClassName: org.h2.Driver
-    password: ''
-    username: sa
-    url: jdbc:h2:mem:~/photomap
-  h2:
-    console:
-      path: /h2-console
-      enabled: 'true'
+    url: ${AWS_MYSQL_URL}
+    username: ${AWS_MYSQL_USERNAME}
+    password: ${AWS_MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+# SQL test 용도
+#logging:
+#  level:
+#    org:
+#      hibernate:
+#        SQL: debug
+#        orm:
+#          jdbc:
+#            bind: trace
+
 
 jwt:
-  secret-key: "123YourFixedSecretKeyYourFixedSecretKey123"
+  secret-key: ${JWT_SECRET_KEY}
 
 # S3
-# TODO: ADD S3 KEYS AND BUCKET NAME
-#cloud:
-#  aws:
-#    s3:
-#      bucket: ${AWS_S3_BUCKET}
-#    credentials:
-#      accessKey: ${AWS_S3_ACCESS_KEY}
-#      secretKey: ${AWS_S3_SECRET_KEY}
-#    stack:
-#      auto-: 'false'
-#    region:
-#      static: ap-northeast-2
+cloud:
+  aws:
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+    credentials:
+      accessKey: ${AWS_S3_ACCESS_KEY}
+      secretKey: ${AWS_S3_SECRET_KEY}
+    stack:
+      auto-: 'false'
+    region:
+      static: ap-northeast-2

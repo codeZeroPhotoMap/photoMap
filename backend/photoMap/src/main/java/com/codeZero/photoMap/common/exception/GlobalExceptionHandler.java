@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
     public ApiResponse<String> handleDuplicateException(DuplicateException ex) {
         return ApiResponse.of(HttpStatus.CONFLICT, ex.getMessage());
     }
-
+    
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");

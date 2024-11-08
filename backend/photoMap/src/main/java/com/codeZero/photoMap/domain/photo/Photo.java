@@ -1,36 +1,54 @@
 package com.codeZero.photoMap.domain.photo;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.codeZero.photoMap.common.BaseEntity;
+import com.codeZero.photoMap.domain.location.Location;
+import com.codeZero.photoMap.domain.member.Member;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Builder
-public class Photo {
+@AllArgsConstructor
+@NoArgsConstructor
+public class Photo extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long memberId;
+    @ManyToOne
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
-    private Long locationId;
+    @ManyToOne
+    @JoinColumn(name = "location_id", nullable = false)
+    private Location location;
 
-    private Long groupId;
+    private String fileName;
 
-    private String url;
+    private String fileExtension;
 
-    @CreatedDate
-    private LocalDateTime createdDateTime;
+    private String fileKey;
 
-    @LastModifiedDate
-    private LocalDateTime modifiedDateTime;
+    @Builder.Default
+    private boolean uploadStatus = false;
+
+    public void updatePhoto(Location location) {
+        this.location = location;
+    }
+
+    public void uploaded() {
+        this.uploadStatus = true;
+    }
+
+    @Override
+    public void delete() {
+        super.delete();
+        this.uploadStatus = false;
+    }
 }
