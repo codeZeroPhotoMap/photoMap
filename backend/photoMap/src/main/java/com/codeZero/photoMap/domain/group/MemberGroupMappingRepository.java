@@ -6,10 +6,26 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MemberGroupMappingRepository extends JpaRepository<MemberGroupMapping, Long> {
 
-    //  특정 그룹에 속한 소프트 삭제되지 않은 MemberGroupMapping 엔티티 조회
+    //특정 멤버가 멤버로 속해 있는 소프트 딜리트되지 않은 그룹 매핑들을 조회
+    List<MemberGroupMapping> findByMemberIdAndIsDeletedFalse(Long memberId);
+
+    //특정 그룹과 멤버 간의 소프트 삭제되지 않은 매핑 관계를 조회
+    Optional<MemberGroupMapping> findByMemberGroupAndMemberAndIsDeletedFalse(MemberGroup memberGroup, Member member);
+
+    //특정 그룹과 멤버에 대한 매핑이 존재하고 소프트 삭제되지 않은지를 확인(객체기반)
+    boolean existsByMemberGroupAndMemberAndIsDeletedFalse(MemberGroup memberGroup, Member member);
+
+    //특정 그룹과 멤버에 대한 매핑이 존재하고 소프트 삭제되지 않은지를 확인(Id기반)
+    boolean existsByMemberGroupIdAndMemberIdAndIsDeletedFalse(Long groupId, Long memberId);
+
+    //그룹 ID와 멤버 이메일을 기반으로, 소프트 삭제되지 않은 매핑이 존재하는지 확인하는 메서드
+    boolean existsByMemberGroupIdAndMemberEmailAndIsDeletedFalse(Long memberGroupId, String memberEmail);
+
+    //특정 그룹에 속한 소프트 삭제되지 않은 MemberGroupMapping 엔티티 조회
     List<MemberGroupMapping> findByMemberGroupIdAndIsDeletedFalse(Long groupId);
 
     //특정 그룹 ID를 기준으로 해당 그룹에 속한 Member 엔티티들 조회

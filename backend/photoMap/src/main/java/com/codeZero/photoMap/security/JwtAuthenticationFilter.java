@@ -34,10 +34,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
             }
-            chain.doFilter(request, response);
 
         } catch (JwtException | IllegalArgumentException e) {
             throw new ForbiddenException("유효하지 않거나 만료된 토큰입니다"); //ForbiddenException 발생
         }
+
+        chain.doFilter(request, response);
+
     }
 }

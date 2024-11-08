@@ -7,8 +7,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-//@RestControllerAdvice
-@ControllerAdvice   //전역 예외 처리기
+@RestControllerAdvice //전역 예외 처리기
 public class GlobalExceptionHandler {
 
     // 400 Bad Request error: 잘못된 요청 매개변수나 유효하지 않은 값이 전달된 경우 사용 (예 - 필수 파라미터 누락, 잘못된 데이터 형식 등)
@@ -42,9 +41,17 @@ public class GlobalExceptionHandler {
     public ApiResponse<String> handleDuplicateException(DuplicateException ex) {
         return ApiResponse.of(HttpStatus.CONFLICT, ex.getMessage());
     }
-    
+
+    //500 Internal Server Error 중 메일 전송 에러
+    @ExceptionHandler(EmailSendException.class)
+    public ApiResponse<String> handleEmailSendException(EmailSendException ex) {
+        return ApiResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    // 500 Internal Server Error 중 일반 런타임 에러
+
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
+    public ApiResponse<String> handleRuntimeException(RuntimeException ex) {
+        return ApiResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 }

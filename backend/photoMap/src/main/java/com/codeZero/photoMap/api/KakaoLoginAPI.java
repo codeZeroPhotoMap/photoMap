@@ -3,9 +3,9 @@ package com.codeZero.photoMap.api;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
 
 import com.codeZero.photoMap.common.exception.KakaoApiException;
+import com.codeZero.photoMap.dto.member.response.KakaoUserInfoResponse;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.springframework.stereotype.Component;
@@ -46,13 +46,9 @@ public class KakaoLoginAPI {
                     // Access Token 추출
                     accessToken = element.get("access_token").getAsString();
 
-                    //TODO : test용, 삭제예정
-                    System.out.println("Access Token: " + accessToken);
                 }
 
             }else {
-                //TODO : test용, 삭제예정
-                System.out.println("카카오 access_token 발급 실패, responseCode : " + responseCode);
                 throw new KakaoApiException("카카오 로그인 중 토큰 발급에 실패했습니다.");
             }
 
@@ -65,9 +61,8 @@ public class KakaoLoginAPI {
     }
 
     //사용자 정보를 가져오는 메서드
-    public HashMap<String, Object> getUserInfo(String accessToken) {
+    public KakaoUserInfoResponse getUserInfo(String accessToken) {
 
-        HashMap<String, Object> userInfo = new HashMap<>();
         String reqURL = "https://kapi.kakao.com/v2/user/me";
 
         try {
@@ -77,8 +72,6 @@ public class KakaoLoginAPI {
             conn.setRequestProperty("Authorization", "Bearer " + accessToken);
 
             int responseCode = conn.getResponseCode();
-            //TODO : test용, 삭제예정
-            System.out.println("Kakao user info response code: " + responseCode);   //
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
 
@@ -93,11 +86,9 @@ public class KakaoLoginAPI {
                         throw new KakaoApiException("필수 사용자 정보가 응답에 포함되지 않았습니다.");
                     }
 
-                    // nickname과 email 확인 및 예외 처리
-                    String nickname = properties.has("nickname") ? properties.get("nickname").getAsString() : null;
-                    String email = kakaoAccount.has("email") && !kakaoAccount.get("email").isJsonNull()
-                            ? kakaoAccount.get("email").getAsString()
-                            : null;
+                    //nickname과 email 확인 및 예외 처리
+                    String nickname = properties.get("nickname").getAsString();
+                    String email = kakaoAccount.get("email").getAsString();
 
                     if (nickname == null || email == null) {
                         throw new KakaoApiException("필수 사용자 정보(nickname 또는 email)가 누락되었습니다.");
@@ -107,8 +98,12 @@ public class KakaoLoginAPI {
                     System.out.println("Received email: " + email);
                     System.out.println("Received nickname: " + nickname);
 
-                    userInfo.put("nickname", nickname);
-                    userInfo.put("email", email);
+                    //KakaoUserInfoResponse 객체 생성 후 반환
+                    return KakaoUserInfoResponse.builder()
+                            .email(email)
+                            .nickname(nickname)
+                            .build();
+
                 }
             }else {
                 throw new KakaoApiException("카카오 사용자 정보 요청에 실패했습니다.");
@@ -117,8 +112,5 @@ public class KakaoLoginAPI {
         } catch (IOException e) {
             throw new KakaoApiException("사용자 정보 요청 중 오류 발생");
         }
-
-        return userInfo;
-
     }
 }

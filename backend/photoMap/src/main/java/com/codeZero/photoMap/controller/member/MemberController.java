@@ -5,6 +5,7 @@ import com.codeZero.photoMap.common.ApiResponse;
 import com.codeZero.photoMap.common.exception.ForbiddenException;
 import com.codeZero.photoMap.common.exception.NotFoundException;
 import com.codeZero.photoMap.dto.member.request.*;
+import com.codeZero.photoMap.dto.member.response.KakaoUserInfoResponse;
 import com.codeZero.photoMap.dto.member.response.MemberResponse;
 import com.codeZero.photoMap.security.CustomUserDetails;
 import com.codeZero.photoMap.service.member.MemberService;
@@ -14,8 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/members")
@@ -41,7 +40,6 @@ public class MemberController {
     public ApiResponse<String> registerMember(@RequestBody MemberRequest request) {
 
         memberService.registerMember(request);
-
         return ApiResponse.ok("회원가입 성공");
     }
 
@@ -72,16 +70,17 @@ public class MemberController {
      * @return ResponseEntity<ApiResponse<String>> 바디에 로그인 성공 메시지, 헤더에 JWT 토큰
      */
     @GetMapping("/login/kakao")
-    public ResponseEntity<ApiResponse<String>> kakaoLogin(@RequestParam("code") String code, HttpSession session) {
+    public ResponseEntity<ApiResponse<String>> kakaoLogin(
+            @RequestParam("code") String code, HttpSession session) {
         //1. 카카오에서 Access Token 가져오기
         String accessToken = kakaoLoginAPI.getAccessToken(code);
 
         //2. Access Token으로 사용자 정보 가져오기
-        HashMap<String, Object> userInfo = kakaoLoginAPI.getUserInfo(accessToken);
+        KakaoUserInfoResponse userInfo = kakaoLoginAPI.getUserInfo(accessToken);
 
         //3. 카카오 DB에서 사용자 정보 가져오기
-        String email = (String) userInfo.get("email");
-        String nickname = (String) userInfo.get("nickname");
+        String email = userInfo.getEmail();
+        String nickname = userInfo.getNickname();
 
         //이메일 값이 null인 경우 예외 처리
         if (email == null) {

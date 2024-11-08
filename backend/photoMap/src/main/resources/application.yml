@@ -41,6 +41,19 @@ spring:
 #            bind: trace
 
 
+#Mail(Mailtrap)
+  mail:
+    host: "sandbox.smtp.mailtrap.io"
+    port: 2525
+    username: ${MAIL_USERNAME}  # Mailtrap에서 제공한 사용자 이름
+    password: ${MAIL_PASSWORD}  # Mailtrap에서 제공한 비밀번호
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 jwt:
   secret-key: ${JWT_SECRET_KEY}
 
