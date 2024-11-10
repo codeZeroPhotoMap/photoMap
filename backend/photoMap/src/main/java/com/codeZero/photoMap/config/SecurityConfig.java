@@ -45,10 +45,12 @@ public class SecurityConfig {
         //예외처리기
         http.exceptionHandling(exception -> exception
                 .authenticationEntryPoint((request, response, authException) -> {
-                    throw new RuntimeException("인증이 필요합니다."); //예외를 던짐
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("인증이 필요합니다.");
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    throw new ForbiddenException("접근 권한이 없습니다."); //사용자 정의 예외를 던짐
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().write("접근 권한이 없습니다.");
                 })
         );
 
