@@ -76,32 +76,5 @@ public class GroupInvitationService {
 
     }
 
-//    /**
-//     * 초대 거절
-//     * @param token 초대 토큰
-//     */
-//    @Transactional
-//    public void declineInvitation(String token) {
-//        GroupInvitation invitation = groupInvitationRepository.findByTokenAndIsDeletedFalse(token)
-//                .orElseThrow(() -> new NotFoundException("유효하지 않거나 만료된 초대 토큰입니다."));
-//
-//        if (invitation.isUsed()) {
-//            throw new IllegalArgumentException("이미 사용된 초대입니다.");
-//        }
-//
-//        if (invitation.isExpired()) {
-//            throw new IllegalArgumentException("초대 토큰이 만료되었습니다.");
-//        }
-//
-//        // 해당 멤버가 이미 그룹에 거절 기록이 있는지 확인 (이메일로 체크)
-//        if (groupInvitationRepository.existsByEmailAndGroupIdAndIsUsedTrue(invitation.getEmail(), invitation.getGroupId())) {
-//            throw new IllegalArgumentException("이미 이 초대를 수락하거나 거절한 기록이 있습니다.");
-//        }
-//
-//        //초대 토큰 사용으로 변경
-//        invitation.use();
-//        groupInvitationRepository.save(invitation);
-//    }
-
 }
 

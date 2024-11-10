@@ -9,6 +9,7 @@ import com.codeZero.photoMap.dto.member.response.KakaoUserInfoResponse;
 import com.codeZero.photoMap.dto.member.response.MemberResponse;
 import com.codeZero.photoMap.security.CustomUserDetails;
 import com.codeZero.photoMap.service.member.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -43,18 +44,37 @@ public class MemberController {
         return ApiResponse.ok("회원가입 성공");
     }
 
+//    //TODO : test용
+//    @GetMapping("/login")
+//    public String showLoginPage() {
+//        return "로그인 페이지 반환.";
+//    }
+
     /**
      * 로그인 API
      * @param request 로그인 요청 DTO
      * @return ResponseEntity<ApiResponse<String>> 바디에 로그인 성공 메시지, 헤더에 JWT 토큰
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<String>> login(
+            @RequestBody LoginRequest request,
+            @RequestParam(value = "redirect", required = false) String redirectUrl, // @RequestParam으로 URL 쿼리 파라미터 가져오기
+            HttpServletRequest httpRequest) {
+
         String token = memberService.login(request);
 
         //Authorization 헤더에 토큰 추가
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + token); // 토큰을 Authorization 헤더에 추가
+
+        //원래 가려던 URL가져와서 리다이렉트URL 응답 처리
+        if (redirectUrl != null && !redirectUrl.isEmpty() && !redirectUrl.equals("/api/members/login")) {
+
+            return ResponseEntity.status(HttpStatus.FOUND)  //302 Found(브라우저에 리다이렉트 지시)
+                    .header(HttpHeaders.LOCATION, redirectUrl)  //LOCATION 사용자가 리다이렉트 될 경로
+                    .headers(headers)   //헤더에 토큰 추가
+                    .build();
+        }
 
         //ApiResponse 형식으로 JSON 응답 생성
         ApiResponse<String> response = ApiResponse.ok("로그인 성공");

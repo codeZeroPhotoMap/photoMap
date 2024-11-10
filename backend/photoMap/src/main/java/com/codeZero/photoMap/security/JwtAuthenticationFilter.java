@@ -25,18 +25,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
-        try {
-            String token = jwtTokenProvider.resolveToken(request); //Request에서 토큰을 가져옴
+        String path = request.getRequestURI();
+        //TODO : test
+        System.out.println("Request URI: " + path); // 요청URI 로그
+        //특정 경로 필터링을 건너뛰도록 설정
+        if (path.equals("/") || path.equals("/api/members") || path.equals("/api/members/login") || path.equals("/api/members/login/kakao")) {
+            //TODO : test
+            System.out.println("Skipping filter for path: " + path); // 필터건너뜀 로그
+            chain.doFilter(request, response);
+            return;
+        }
 
-            //토큰이 유효한 경우, 인증 설정
+        try {
+            // JWT 토큰 검증 로직
+            String token = jwtTokenProvider.resolveToken(request);
             if (token != null && jwtTokenProvider.validateToken(token)) {
                 Authentication auth = jwtTokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(auth);
-
             }
-
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new ForbiddenException("유효하지 않거나 만료된 토큰입니다"); //ForbiddenException 발생
+        } catch (Exception e) {
+            //JWT 로그
+            System.err.println("JWT 인증 오류: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT 인증 오류: " + e.getMessage());
+            return;
         }
 
         chain.doFilter(request, response);

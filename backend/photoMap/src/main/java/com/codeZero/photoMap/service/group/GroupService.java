@@ -201,9 +201,12 @@ public class GroupService {
 
         groupInvitationRepository.save(invitation);
 
-        //수락 및 거절 링크 생성
-        String acceptLink = "http://localhost:8080/api/invitations/accept?token=" + token;
-//        String declineLink = "http://localhost:8080/api/invitations/decline?token=" + token;
+        //수락 링크 생성
+//        String acceptLink = "http://localhost:8080/api/members/login?redirect=/api/invitations/accept&token=" + token;
+//        String acceptLink = "http://localhost:8080/api/invitations/accept?token=" + token;
+
+        String acceptLink = "http://52.79.152.88:8080/api/invitations/accept?token=" + token;
+
 
         //초대하는 멤버의 이름(닉네임) 가져오기
         Member inviter = memberRepository.findByIdAndIsDeletedFalse(memberId)
