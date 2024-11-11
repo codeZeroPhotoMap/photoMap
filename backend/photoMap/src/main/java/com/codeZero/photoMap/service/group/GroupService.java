@@ -128,10 +128,9 @@ public class GroupService {
     /**
      * 그룹 삭제
      * @param groupId   삭제할 그룹Id
-     * @return GroupResponse    소프트 삭제된 그룹 정보 응답 DTO
      */
     @Transactional
-    public GroupResponse deleteGroup(Long groupId, Long ownerId) {
+    public void deleteGroup(Long groupId, Long ownerId) {
 
         //그룹 확인 및 존재 여부 검증
         MemberGroup group = memberGroupRepository.findByIdAndIsDeletedFalse(groupId)
@@ -158,9 +157,7 @@ public class GroupService {
         }
 
         //소프트 딜리트된 그룹 저장
-        MemberGroup deletedGroup = memberGroupRepository.save(group);
-
-        return GroupResponse.of(deletedGroup);
+        memberGroupRepository.save(group);
     }
 
     /**

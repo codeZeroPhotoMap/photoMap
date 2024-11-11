@@ -35,26 +35,28 @@ public class GroupInvitationController {
     @GetMapping("/accept")
     public ResponseEntity<String> acceptInvitation(
             @RequestParam String token,
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
+            @AuthenticationPrincipal CustomUserDetails userDetails)
+//    ,
+//            HttpServletRequest request,
+//            HttpServletResponse response) throws IOException
+            {
 
-        //로그인되지 않은 상태에서 요청이 오면 로그인 페이지로 리다이렉트
-        if (userDetails == null) {
-            String currentUrl = request.getRequestURL().toString();
-            String queryString = request.getQueryString() != null ? "?" + request.getQueryString() : "";
-
-            //이미 redirect 파라미터가 있는지 확인하여 중복 추가 방지
-            if (!currentUrl.contains("redirect=")) {
-                String redirectUrl = "/api/members/login?redirect=" + URLEncoder.encode(currentUrl + queryString, StandardCharsets.UTF_8);
-                response.sendRedirect(redirectUrl);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            } else {
-                //이미 redirect 파라미터가 있는 경우 무한 리다이렉트를 방지하기 위해 오류 반환
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "잘못된 요청입니다.");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-            }
-        }
+//        //로그인되지 않은 상태에서 요청이 오면 로그인 페이지로 리다이렉트
+//        if (userDetails == null) {
+//            String currentUrl = request.getRequestURL().toString();
+//            String queryString = request.getQueryString() != null ? "?" + request.getQueryString() : "";
+//
+//            //이미 redirect 파라미터가 있는지 확인하여 중복 추가 방지
+//            if (!currentUrl.contains("redirect=")) {
+//                String redirectUrl = "/api/members/login?redirect=" + URLEncoder.encode(currentUrl + queryString, StandardCharsets.UTF_8);
+//                response.sendRedirect(redirectUrl);
+//                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//            } else {
+//                //이미 redirect 파라미터가 있는 경우 무한 리다이렉트를 방지하기 위해 오류 반환
+//                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "잘못된 요청입니다.");
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+//            }
+//        }
 
         //로그인된 사용자라면 초대 수락 처리
         Long memberId = userDetails.getId();

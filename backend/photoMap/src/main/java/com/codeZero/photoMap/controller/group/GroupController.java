@@ -26,7 +26,7 @@ public class GroupController {
 
     /**
      * 그룹 생성 API
-     * @param request
+     * @param request   그룹 생성 요청 DTO
      * @param userDetails   인증된 사용자의 정보가 포함된 객체(토큰에서 추출된 로그인한 사용자 정보)
      * @return ApiResponse<GroupResponse>   생성된 그룹 응답 DTO
      */
@@ -101,15 +101,15 @@ public class GroupController {
      * @return ApiResponse<GroupResponse>   삭제된 그룹 정보 응답 DTO(HTTPStatus 204)
      */
     @PatchMapping("/{groupId}/delete")
-    public ApiResponse<GroupResponse> deleteGroup(
+    public ApiResponse<Void> deleteGroup(
             @PathVariable Long groupId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
 
         Long ownerId = userDetails.getId();
-        GroupResponse response = groupService.deleteGroup(groupId, ownerId);
+        groupService.deleteGroup(groupId, ownerId);
 
-        return ApiResponse.of(HttpStatus.NO_CONTENT, response);
+        return ApiResponse.of(HttpStatus.NO_CONTENT, null);
     }
 
     /**
