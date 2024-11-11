@@ -1,23 +1,22 @@
 package com.codeZero.photoMap.config;
 
-import com.codeZero.photoMap.common.exception.ForbiddenException;
+
 import com.codeZero.photoMap.security.JwtAuthenticationFilter;
 import com.codeZero.photoMap.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.CorsUtils;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +37,18 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("https://goormfinal.vercel.app");
+        configuration.addAllowedMethod("*"); //모든 HTTP 메서드 허용
+        configuration.addAllowedHeader("*"); //모든 헤더 허용
+        configuration.setAllowCredentials(true); //인증 정보 포함 여부
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -52,6 +63,7 @@ public class SecurityConfig {
         //api 접근 권한 설정
         http.authorizeHttpRequests((auth) -> auth
 //                .requestMatchers(PathRequest.toH2Console()).permitAll() // h2console 접근 모두 허용
+                .requestMatchers(CorsUtils::isPreFlightRequest).permitAll() //Preflight request 요청 모두 허용
                 .requestMatchers( "/", "/api/members/login", "/api/members/login/kakao").permitAll()    //메인,로그인 모두 접근 허용
                 .requestMatchers(HttpMethod.POST, "/api/members").permitAll()   //회원가입 접근 허용
                 .requestMatchers(HttpMethod.PATCH, "/api/members/delete").authenticated() //탈퇴 허용
