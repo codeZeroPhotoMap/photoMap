@@ -10,7 +10,6 @@ import com.codeZero.photoMap.dto.member.response.KakaoUserInfoResponse;
 import com.codeZero.photoMap.dto.member.response.MemberResponse;
 import com.codeZero.photoMap.security.CustomUserDetails;
 import com.codeZero.photoMap.service.member.MemberService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -48,11 +47,10 @@ public class MemberController {
     /**
      * 이메일 중복 확인
      * @param email 중복여부를 확인할 email 주소
-     * @return 중복된 경우 : HTTP 409 상태 코드와 응답 객체 반환(중복여부와 메세지)
-     *         중복되지 않은 경우 : HTTP 200 상태 코드와 응답 객체 반환(중복여부와 메세지)
+     * @return ApiResponse<EmailCheckResponse> 중복 여부와 메시지를 포함한 응답 DTO
      */
     @GetMapping("/check-email")
-    public ResponseEntity<EmailCheckResponse> checkEmailDuplicate(
+    public ApiResponse<EmailCheckResponse> checkEmailDuplicate(
             @RequestParam String email) {
         boolean isDuplicate = memberService.checkDuplicateEmail(email);
         String message = isDuplicate ? "이미 존재하는 이메일입니다" : "사용 가능한 이메일입니다";
@@ -62,13 +60,11 @@ public class MemberController {
                 .message(message)
                 .build();
 
-        return isDuplicate
-                ? ResponseEntity.status(HttpStatus.CONFLICT).body(response)
-                : ResponseEntity.ok(response);
+        return ApiResponse.ok(response);
     }
 
     /**
-     *
+     * 로그인 API
      * @param request 로그인 요청 DTO
      * @return ResponseEntity<ApiResponse < String>> - 로그인 성공 시 JWT 토큰을 헤더에 반환
      */
@@ -113,7 +109,7 @@ public class MemberController {
             throw new IllegalArgumentException("이메일 정보를 불러오지 못했습니다. 카카오 로그인 설정을 확인하세요.");
         }
 
-        try {
+//        try {
 
             //4.회원 가입 또는 로그인 처리 후 JWT 토큰 반환
             String jwtToken = memberService.processKakaoLogin(email, nickname);
@@ -129,18 +125,18 @@ public class MemberController {
             ApiResponse<String> response = ApiResponse.ok("카카오 로그인 성공");
             return ResponseEntity.ok().headers(headers).body(response);
 
-        } catch (ForbiddenException  e) {
-
-            //탈퇴된 회원인 경우 예외 메시지 반환
-            throw new ForbiddenException("탈퇴한 회원입니다. 로그인이 불가합니다.");
-
-        }
+//        } catch (ForbiddenException  e) {
+//
+//            //탈퇴된 회원인 경우 예외 메시지 반환
+//            throw new ForbiddenException("탈퇴한 회원입니다. 로그인이 불가합니다.");
+//
+//        }
     }
 
     /**
      * 로그인한 회원 정보 조회
      * @param userDetails 로그인한 사용자의 CustomUserDetails 객체
-     * @return ApiResponse<MemberResponse> 회원 정보
+     * @return ApiResponse<MemberResponse> 맴버 정보 응답 DTO
      */
     @GetMapping("/info")
     public ApiResponse<MemberResponse> getMemberInfo(
@@ -159,7 +155,7 @@ public class MemberController {
      * 이름 변경 API
      * @param userDetails 로그인한 사용자의 CustomUserDetails 객체
      * @param request 이름 변경 요청 DTO
-     * @return 이름 변경 성공 메시지, 변경된 멤버 정보 DTO
+     * @return ApiResponse<MemberResponse> 변경된 멤버 정보 응답 DTO
      */
     @PatchMapping("/name")
     public ApiResponse<MemberResponse> updateName(
@@ -168,14 +164,14 @@ public class MemberController {
 
         MemberResponse response = memberService.updateName(userDetails.getId(), request);
 
-        return ApiResponse.of(HttpStatus.OK, "이름 변경 성공", response);
+        return ApiResponse.ok(response);
     }
 
     /**
      * 비밀번호 변경 API
      * @param userDetails 로그인한 사용자의 CustomUserDetails 객체
      * @param request 비밀번호 변경 요청 DTO
-     * @return 비밀번호 변경 성공 메시지, 변경된 멤버 정보 DTO
+     * @return ApiResponse<MemberResponse> 변경된 멤버 정보 DTO
      */
     @PatchMapping("/password")
     public ApiResponse<MemberResponse> updatePassword(
@@ -184,7 +180,7 @@ public class MemberController {
 
         MemberResponse response = memberService.updatePassword(userDetails.getId(), request);
 
-        return ApiResponse.of(HttpStatus.OK, "비밀번호 변경 성공", response);
+        return ApiResponse.ok(response);
     }
 
     /**
