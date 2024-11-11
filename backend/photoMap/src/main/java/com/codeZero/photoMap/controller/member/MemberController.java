@@ -5,6 +5,7 @@ import com.codeZero.photoMap.common.ApiResponse;
 import com.codeZero.photoMap.common.exception.ForbiddenException;
 import com.codeZero.photoMap.common.exception.NotFoundException;
 import com.codeZero.photoMap.dto.member.request.*;
+import com.codeZero.photoMap.dto.member.response.EmailCheckResponse;
 import com.codeZero.photoMap.dto.member.response.KakaoUserInfoResponse;
 import com.codeZero.photoMap.dto.member.response.MemberResponse;
 import com.codeZero.photoMap.security.CustomUserDetails;
@@ -44,37 +45,42 @@ public class MemberController {
         return ApiResponse.ok("회원가입 성공");
     }
 
-//    //TODO : test용
-//    @GetMapping("/login")
-//    public String showLoginPage() {
-//        return "로그인 페이지 반환.";
-//    }
+    /**
+     * 이메일 중복 확인
+     * @param email 중복여부를 확인할 email 주소
+     * @return 중복된 경우 : HTTP 409 상태 코드와 응답 객체 반환(중복여부와 메세지)
+     *         중복되지 않은 경우 : HTTP 200 상태 코드와 응답 객체 반환(중복여부와 메세지)
+     */
+    @GetMapping("/check-email")
+    public ResponseEntity<EmailCheckResponse> checkEmailDuplicate(
+            @RequestParam String email) {
+        boolean isDuplicate = memberService.checkDuplicateEmail(email);
+        String message = isDuplicate ? "이미 존재하는 이메일입니다" : "사용 가능한 이메일입니다";
+
+        EmailCheckResponse response = EmailCheckResponse.builder()
+                .isDuplicate(isDuplicate)
+                .message(message)
+                .build();
+
+        return isDuplicate
+                ? ResponseEntity.status(HttpStatus.CONFLICT).body(response)
+                : ResponseEntity.ok(response);
+    }
 
     /**
-     * 로그인 API
+     *
      * @param request 로그인 요청 DTO
-     * @return ResponseEntity<ApiResponse<String>> 바디에 로그인 성공 메시지, 헤더에 JWT 토큰
+     * @return ResponseEntity<ApiResponse < String>> - 로그인 성공 시 JWT 토큰을 헤더에 반환
      */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<String>> login(
-            @RequestBody LoginRequest request,
-            @RequestParam(value = "redirect", required = false) String redirectUrl, // @RequestParam으로 URL 쿼리 파라미터 가져오기
-            HttpServletRequest httpRequest) {
+            @RequestBody LoginRequest request) {
 
         String token = memberService.login(request);
 
         //Authorization 헤더에 토큰 추가
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + token); // 토큰을 Authorization 헤더에 추가
-
-        //원래 가려던 URL가져와서 리다이렉트URL 응답 처리
-        if (redirectUrl != null && !redirectUrl.isEmpty() && !redirectUrl.equals("/api/members/login")) {
-
-            return ResponseEntity.status(HttpStatus.FOUND)  //302 Found(브라우저에 리다이렉트 지시)
-                    .header(HttpHeaders.LOCATION, redirectUrl)  //LOCATION 사용자가 리다이렉트 될 경로
-                    .headers(headers)   //헤더에 토큰 추가
-                    .build();
-        }
 
         //ApiResponse 형식으로 JSON 응답 생성
         ApiResponse<String> response = ApiResponse.ok("로그인 성공");
@@ -136,7 +142,7 @@ public class MemberController {
      * @param userDetails 로그인한 사용자의 CustomUserDetails 객체
      * @return ApiResponse<MemberResponse> 회원 정보
      */
-    @GetMapping
+    @GetMapping("/info")
     public ApiResponse<MemberResponse> getMemberInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 

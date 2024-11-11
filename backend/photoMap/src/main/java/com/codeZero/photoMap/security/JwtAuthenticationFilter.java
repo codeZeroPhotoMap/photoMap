@@ -1,8 +1,5 @@
 package com.codeZero.photoMap.security;
 
-
-import com.codeZero.photoMap.common.exception.ForbiddenException;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,17 +21,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-
-        String path = request.getRequestURI();
-        //TODO : test
-        System.out.println("Request URI: " + path); // 요청URI 로그
-        //특정 경로 필터링을 건너뛰도록 설정
-        if (path.equals("/") || path.equals("/api/members") || path.equals("/api/members/login") || path.equals("/api/members/login/kakao")) {
-            //TODO : test
-            System.out.println("Skipping filter for path: " + path); // 필터건너뜀 로그
-            chain.doFilter(request, response);
-            return;
-        }
 
         try {
             // JWT 토큰 검증 로직

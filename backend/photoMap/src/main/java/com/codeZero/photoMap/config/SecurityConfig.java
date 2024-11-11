@@ -4,11 +4,13 @@ package com.codeZero.photoMap.config;
 import com.codeZero.photoMap.security.JwtAuthenticationFilter;
 import com.codeZero.photoMap.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -43,6 +45,7 @@ public class SecurityConfig {
         configuration.addAllowedOrigin("https://goormfinal.vercel.app");
         configuration.addAllowedMethod("*"); //모든 HTTP 메서드 허용
         configuration.addAllowedHeader("*"); //모든 헤더 허용
+        configuration.addExposedHeader("Authorization"); //JWT관련(프론트 헤더에서 읽을 수 있게 허용)
         configuration.setAllowCredentials(true); //인증 정보 포함 여부
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -64,7 +67,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests((auth) -> auth
 //                .requestMatchers(PathRequest.toH2Console()).permitAll() // h2console 접근 모두 허용
                 .requestMatchers(CorsUtils::isPreFlightRequest).permitAll() //Preflight request 요청 모두 허용
-                .requestMatchers( "/", "/api/members/login", "/api/members/login/kakao").permitAll()    //메인,로그인 모두 접근 허용
+                .requestMatchers( "/", "/api/members/login", "/api/members/login/kakao", "/api/members/check-email").permitAll()    //메인,로그인 모두 접근 허용
                 .requestMatchers(HttpMethod.POST, "/api/members").permitAll()   //회원가입 접근 허용
                 .requestMatchers(HttpMethod.PATCH, "/api/members/delete").authenticated() //탈퇴 허용
                 .requestMatchers(HttpMethod.POST, "/api/groups/*/invite").authenticated() //초대URL
@@ -74,26 +77,11 @@ public class SecurityConfig {
         //예외 처리기 설정
         http.exceptionHandling(exception -> exception
                 .authenticationEntryPoint((request, response, authException) -> {
-                    String currentUri = request.getRequestURI();
-
-                    //인증이 필요하지 않은 경로는 리다이렉트하지 않음(아래 조건들이 아니고, 인증이 안되어있다면 로그인으로 리다이렉트)
-                    if (!(currentUri.equals("/") ||
-                            (currentUri.startsWith("/api/members") && request.getMethod().equals("POST")) ||
-                            currentUri.startsWith("/api/members/login") ||
-                            currentUri.startsWith("/api/members/login/kakao") ||
-                            currentUri.equals("/favicon.ico"))  //favicon.ico 요청은 무시
-                        ) {
-
-                        String query = request.getQueryString() != null ? "?" + request.getQueryString() : "";
-                        String redirectUrl = currentUri + query;
-                        response.sendRedirect("/api/members/login?redirect=" + URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8));
-                    } else {
-                        //허용된 경로는 리다이렉트하지 않음
-                        response.setStatus(HttpServletResponse.SC_OK);
-                    }
+                    //인증되지 않은 요청에 대해 401 응답 반환
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("인증이 필요합니다.");
                 })
         );
-
 
         http
                 //로그아웃 설정
