@@ -69,6 +69,15 @@ public class MemberService {
     }
 
     /**
+     * 이메일 중복 확인
+     * @param email 이메일 주소
+     * @return 중복여부
+     */
+    public boolean checkDuplicateEmail(String email) {
+        return memberRepository.existsByEmailAndIsDeletedFalse(email);
+    }
+
+    /**
      * 나만의 그룹 생성
      * @param member 회원가입한 멤버 객체
      */
