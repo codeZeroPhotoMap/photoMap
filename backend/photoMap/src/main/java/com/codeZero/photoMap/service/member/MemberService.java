@@ -206,7 +206,12 @@ public class MemberService {
 
         Member member = findMemberById(memberId);
 
-        String encodePassword = passwordEncoder.encode(request.getPassword());
+        //기존 비밀번호 검증
+        if (!passwordEncoder.matches(request.getCurrentPassword(), member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 올바르지 않습니다.");
+        }
+
+        String encodePassword = passwordEncoder.encode(request.getNewPassword());
 
         member.updatePassword(encodePassword);
 
