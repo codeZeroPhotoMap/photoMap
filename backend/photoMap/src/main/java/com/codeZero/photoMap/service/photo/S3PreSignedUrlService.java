@@ -38,7 +38,7 @@ public class S3PreSignedUrlService {
                 new GeneratePresignedUrlRequest(bucket, fileKey)
                         .withMethod(HttpMethod.PUT)
                         .withKey(fileKey)
-                        .withContentType("image/" + fileExtension)
+//                        .withContentType("image/" + fileExtension)  // 이미지 파일 조회할 때 클라이언트에서 헤더에 Content-Type 지정하지 않아도 조회 가능하도록 주석 처리함.
                         .withExpiration(expiration);
 
 /*
