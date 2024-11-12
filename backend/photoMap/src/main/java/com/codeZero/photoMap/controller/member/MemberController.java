@@ -4,12 +4,17 @@ import com.codeZero.photoMap.api.KakaoLoginAPI;
 import com.codeZero.photoMap.common.ApiResponse;
 import com.codeZero.photoMap.common.exception.ForbiddenException;
 import com.codeZero.photoMap.common.exception.NotFoundException;
+import com.codeZero.photoMap.common.exception.UnauthorizedException;
+import com.codeZero.photoMap.domain.member.Member;
 import com.codeZero.photoMap.dto.member.request.*;
 import com.codeZero.photoMap.dto.member.response.EmailCheckResponse;
 import com.codeZero.photoMap.dto.member.response.KakaoUserInfoResponse;
 import com.codeZero.photoMap.dto.member.response.MemberResponse;
+import com.codeZero.photoMap.dto.member.response.TokenResponse;
 import com.codeZero.photoMap.security.CustomUserDetails;
+import com.codeZero.photoMap.security.JwtTokenProvider;
 import com.codeZero.photoMap.service.member.MemberService;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -17,17 +22,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/api/members")
 public class MemberController {
 
     private final MemberService memberService;
     private final KakaoLoginAPI kakaoLoginAPI;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public MemberController(MemberService memberService, KakaoLoginAPI kakaoLoginAPI) {
+    public MemberController(MemberService memberService, KakaoLoginAPI kakaoLoginAPI, JwtTokenProvider jwtTokenProvider) {
 
         this.memberService = memberService;
         this.kakaoLoginAPI = kakaoLoginAPI;
+        this.jwtTokenProvider = jwtTokenProvider;
 
     }
 
@@ -66,22 +75,22 @@ public class MemberController {
     /**
      * 로그인 API
      * @param request 로그인 요청 DTO
-     * @return ResponseEntity<ApiResponse < String>> - 로그인 성공 시 JWT 토큰을 헤더에 반환
+     * @return ResponseEntity<ApiResponse<TokenResponse>> 로그인 성공 시 액세스 토큰 및 리프레시 토큰을 포함한 응답 DTO
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(
+    public ResponseEntity<ApiResponse<TokenResponse>> login(
             @RequestBody LoginRequest request) {
 
-        String token = memberService.login(request);
+        TokenResponse tokenResponse = memberService.login(request);
 
-        //Authorization 헤더에 토큰 추가
+        //Authorization 헤더에 access 토큰 추가
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + token); // 토큰을 Authorization 헤더에 추가
+        headers.add("Authorization", "Bearer " + tokenResponse.getAccessToken());
 
         //ApiResponse 형식으로 JSON 응답 생성
-        ApiResponse<String> response = ApiResponse.ok("로그인 성공");
+        ApiResponse<TokenResponse> response = ApiResponse.ok(tokenResponse);
 
-        //헤더와 ApiResponse 응답 반환
+        //헤더(accessToken포함)와 ApiResponse 응답 반환
         return ResponseEntity.ok().headers(headers).body(response);
     }
 
@@ -92,7 +101,7 @@ public class MemberController {
      * @return ResponseEntity<ApiResponse<String>> 바디에 로그인 성공 메시지, 헤더에 JWT 토큰
      */
     @GetMapping("/login/kakao")
-    public ResponseEntity<ApiResponse<String>> kakaoLogin(
+    public ResponseEntity<ApiResponse<TokenResponse>> kakaoLogin(
             @RequestParam("code") String code, HttpSession session) {
         //1. 카카오에서 Access Token 가져오기
         String accessToken = kakaoLoginAPI.getAccessToken(code);
@@ -111,19 +120,22 @@ public class MemberController {
 
 //        try {
 
-            //4.회원 가입 또는 로그인 처리 후 JWT 토큰 반환
-            String jwtToken = memberService.processKakaoLogin(email, nickname);
-
-            //TODO : test용, 삭제예정
-            System.out.println("jwtToken: Bearer " + jwtToken);
+            //4.회원 가입 또는 로그인 처리 후 JWT 액세스 및 리프레시 토큰 반환
+            TokenResponse tokenResponse = memberService.processKakaoLogin(email, nickname);
 
             //Authorization 헤더에 토큰 추가
             HttpHeaders headers = new HttpHeaders();
-            headers.add("Authorization", "Bearer " + jwtToken);
+            headers.add("Authorization", "Bearer " + tokenResponse.getAccessToken());
 
             //JWT 토큰을 응답으로 반환
-            ApiResponse<String> response = ApiResponse.ok("카카오 로그인 성공");
-            return ResponseEntity.ok().headers(headers).body(response);
+            ApiResponse<TokenResponse> response = ApiResponse.ok(tokenResponse);
+//            return ResponseEntity.ok().headers(headers).body(response);
+
+        //리디렉션해서 파라미터로 토큰 전달
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("https://goormfinal.vercel.app/map?accessToken=" + tokenResponse.getAccessToken() + "&refreshToken=" + tokenResponse.getRefreshToken()))
+                .build();
+
 
 //        } catch (ForbiddenException  e) {
 //
@@ -131,6 +143,33 @@ public class MemberController {
 //            throw new ForbiddenException("탈퇴한 회원입니다. 로그인이 불가합니다.");
 //
 //        }
+    }
+
+    /**
+     * 리프레시 토큰을 통해 새로운 accessToken,refreshToken 발급 API
+     * @param request 리프레시 토큰을 담고 있는 요청 DTO
+     * @return ResponseEntity<ApiResponse<TokenResponse>> - 새로 발급된 액세스 토큰과 리프레시 토큰을 포함한 응답 DTO
+     */
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<TokenResponse>> refreshAccessToken(
+            @RequestBody RefreshTokenRequest request) {
+        if (jwtTokenProvider.validateToken(request.getRefreshToken())) {
+            Claims claims = jwtTokenProvider.getClaims(request.getRefreshToken());
+            String userId = claims.getSubject();
+
+            String newAccessToken = jwtTokenProvider.createToken(userId);
+            String newRefreshToken = jwtTokenProvider.createRefreshToken(userId);
+
+            TokenResponse tokenResponse = TokenResponse.builder()
+                    .accessToken(newAccessToken)
+                    .refreshToken(newRefreshToken)
+                    .build();
+
+            return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK, "토큰 갱신 성공", tokenResponse));
+
+        } else {
+            throw new UnauthorizedException("리프레시 토큰이 만료되었거나 유효하지 않습니다.");
+        }
     }
 
     /**
@@ -177,6 +216,13 @@ public class MemberController {
     public ApiResponse<MemberResponse> updatePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody PasswordUpdateRequest request) {
+
+        Member member = memberService.findMemberById(userDetails.getId());
+
+        //카카오 사용자는 비번 변경 불가
+        if (member.isSocialLogin()) {
+            throw new ForbiddenException("카카오 로그인 사용자는 비밀번호를 변경할 수 없습니다.");
+        }
 
         MemberResponse response = memberService.updatePassword(userDetails.getId(), request);
 

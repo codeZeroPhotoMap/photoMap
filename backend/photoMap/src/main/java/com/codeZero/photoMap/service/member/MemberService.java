@@ -12,6 +12,7 @@ import com.codeZero.photoMap.dto.member.request.MemberRequest;
 import com.codeZero.photoMap.dto.member.request.NameUpdateRequest;
 import com.codeZero.photoMap.dto.member.request.PasswordUpdateRequest;
 import com.codeZero.photoMap.dto.member.response.MemberResponse;
+import com.codeZero.photoMap.dto.member.response.TokenResponse;
 import com.codeZero.photoMap.security.JwtTokenProvider;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 
 @Service
@@ -96,29 +98,36 @@ public class MemberService {
     /**
      * 로그인
      * @param request 로그인 요청 DTO
-     * @return JWT 토큰
+     * @return TokenResponse - JWT 액세스 토큰과 리프레시 토큰을 포함한 응답 DTO
      */
-    public String login(LoginRequest request) {
+    public TokenResponse login(LoginRequest request) {
         //이메일로 회원 조회
         Member member = memberRepository.findByEmailAndIsDeletedFalse(request.getEmail())
                 .orElseThrow(() -> new NotFoundException("회원을 찾을 수 없습니다"));
 
         //비밀번호 확인
-        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+        if (!member.isSocialLogin() && !passwordEncoder.matches(request.getPassword(), member.getPassword())) {
             throw new DuplicateException("비밀번호가 일치하지 않습니다");
         }
 
+        //JwtTokenProvider 를 통해 토큰 생성
+        String accessToken = jwtTokenProvider.createToken(member.getEmail());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
+
         //JWT 토큰 생성 후 반환
-        return jwtTokenProvider.createToken(member.getEmail());  //JwtTokenProvider 를 통해 토큰 생성
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     /**
      * 카카오로 회원가입 & 로그인
      * @param email 카카오이메일
      * @param nickname  카카오닉네임
-     * @return JWT 토큰
+     * @return TokenResponse - JWT 액세스 토큰과 리프레시 토큰을 포함한 응답 DTO
      */
-    public String processKakaoLogin(String email, String nickname) {
+    public TokenResponse processKakaoLogin(String email, String nickname) {
 
         if (email == null || email.isEmpty()) {
             throw new NotFoundException("이메일 정보가 없습니다. 카카오 로그인 설정을 확인해주세요.");
@@ -126,10 +135,6 @@ public class MemberService {
 
         //이메일로 멤버 찾기(소프트 딜리트된 멤버여도 찾기)
         Optional<Member> existingMember = memberRepository.findByEmail(email);
-
-        //TODO : test용, 삭제예정
-        System.out.println("member with email: " + email + " and nickname: " + nickname);
-
 
         if (existingMember.isPresent()) {
 
@@ -141,18 +146,25 @@ public class MemberService {
                 throw new ForbiddenException("탈퇴한 회원입니다. 로그인이 불가합니다.");
             }
 
-            return jwtTokenProvider.createToken(member.getEmail());
+            //액세스 및 리프레시 토큰 생성
+            String accessToken = jwtTokenProvider.createToken(member.getEmail());
+            String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
+
+            return TokenResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
 
         } else{
 
-            //TODO : 변경 예정
             //새로운 회원이라면 더미 비밀번호를 설정하여 DB에 저장
-            String dummyPassword = "kakao_login_dummy_password";
+            String dummyPassword = passwordEncoder.encode(UUID.randomUUID().toString());
 
             Member newMember = Member.builder()
                     .email(email)
                     .password(dummyPassword) //카카오 로그인 사용자를 위한 더미 비밀번호(비밀번호 필수이기 때문)
                     .name(nickname)
+                    .isSocialLogin(true)    //카카오 사용자
                     .role(MemberRole.ROLE_USER)
                     .build();
 
@@ -161,8 +173,14 @@ public class MemberService {
             //나만의 그룹 생성
             createPersonalGroup(newMember);
 
-            return jwtTokenProvider.createToken(newMember.getEmail());
+            //액세스 및 리프레시 토큰 생성
+            String accessToken = jwtTokenProvider.createToken(newMember.getEmail());
+            String refreshToken = jwtTokenProvider.createRefreshToken(newMember.getEmail());
 
+            return TokenResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
         }
     }
 
@@ -258,7 +276,7 @@ public class MemberService {
      * @param memberId 조회할 멤버Id
      * @return Member 객체
      */
-    private Member findMemberById(Long memberId) {
+    public Member findMemberById(Long memberId) {
 
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException("회원이 존재하지 않습니다"));

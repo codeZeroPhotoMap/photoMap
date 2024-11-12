@@ -30,7 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (Exception e) {
-            //JWT 로그
+            //JWT 로그 (401에러)
             System.err.println("JWT 인증 오류: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT 인증 오류: " + e.getMessage());
             return;
