@@ -1,8 +1,10 @@
 package com.codeZero.photoMap.security;
 
 import com.codeZero.photoMap.common.exception.ForbiddenException;
+import com.codeZero.photoMap.common.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,6 +55,20 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String createRefreshToken(String username) {
+        //현재 시간
+        Instant now = Instant.now();
+        //긴 만료 시간(7일) 설정
+        Instant validity = now.plus(7, ChronoUnit.DAYS);
+
+        return Jwts.builder()
+                .setSubject(username) //주체(subject)를 바로 설정
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(validity))
+                .signWith(SECRET_KEY)
+                .compact();
+    }
+
     //토큰에서 인증 정보 조회
     public Authentication getAuthentication(String token) {
         String username = getUsername(token); //토큰에서 사용자 이름 추출
@@ -93,11 +109,28 @@ public class JwtTokenProvider {
 
             return true;
 
-        } catch (Exception e) {
-            throw new ForbiddenException("유효하지 않거나 만료된 토큰입니다"); // ForbiddenException 발생
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+        throw new UnauthorizedException("토큰이 만료되었습니다.");
+    } catch (io.jsonwebtoken.SignatureException e) {
+        throw new UnauthorizedException("유효하지 않은 서명입니다.");
+    } catch (Exception e) {
+        throw new UnauthorizedException("유효하지 않거나 만료된 토큰입니다.");
 
 //            return false;
 
         }
     }
+
+    public Claims getClaims(String token) {
+        try {
+            return Jwts.parser()
+                    .setSigningKey(SECRET_KEY) // SECRET_KEY로 서명 설정
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody(); // 클레임 부분 반환
+        } catch (Exception e) {
+            throw new UnauthorizedException("유효하지 않거나 만료된 토큰입니다."); // 예외 발생 시 사용자에게 알림
+        }
+    }
+
 }

@@ -26,6 +26,9 @@ public class Member extends BaseEntity {
     private String password;
     @Column(nullable = false)
     private String name;
+    @Column(nullable = false)
+    private boolean isSocialLogin;
+
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)  // Enum 값을 문자열로 저장
@@ -36,11 +39,12 @@ public class Member extends BaseEntity {
 
 
     @Builder
-    private Member(Long id, String email, String password, String name, MemberRole role) {
+    private Member(Long id, String email, String password, String name, boolean isSocialLogin, MemberRole role) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.name = name;
+        this.isSocialLogin = isSocialLogin;
         this.role = role;
     }
 

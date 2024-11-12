@@ -16,6 +16,12 @@ public class GlobalExceptionHandler {
         return ApiResponse.of(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    // 401 Unauthorized error: 인증되지 않은 요청에 사용
+    @ExceptionHandler(UnauthorizedException.class)
+    public ApiResponse<String> handleUnauthorizedException(UnauthorizedException ex) {
+        return ApiResponse.of(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
     // 403 forbidden error: 해당 엔티티에 속해 있지 않는 경우 사용 (예 - 찾은 그룹이 사용자가 속한 그룹이 아닌 경우)
     @ExceptionHandler(ForbiddenException.class)
     public ApiResponse<String> handleForbiddenException(ForbiddenException ex) {
@@ -49,7 +55,6 @@ public class GlobalExceptionHandler {
     }
 
     // 500 Internal Server Error 중 일반 런타임 에러
-
     @ExceptionHandler(RuntimeException.class)
     public ApiResponse<String> handleRuntimeException(RuntimeException ex) {
         return ApiResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());

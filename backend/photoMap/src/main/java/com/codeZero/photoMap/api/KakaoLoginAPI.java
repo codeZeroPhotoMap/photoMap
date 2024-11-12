@@ -95,10 +95,6 @@ public class KakaoLoginAPI {
                         throw new KakaoApiException("필수 사용자 정보(nickname 또는 email)가 누락되었습니다.");
                     }
 
-                    //TODO : test용, 삭제예정
-                    System.out.println("Received email: " + email);
-                    System.out.println("Received nickname: " + nickname);
-
                     //KakaoUserInfoResponse 객체 생성 후 반환
                     return KakaoUserInfoResponse.builder()
                             .email(email)
