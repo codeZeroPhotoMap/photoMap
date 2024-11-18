@@ -10,7 +10,7 @@ public interface GroupInvitationRepository extends JpaRepository<GroupInvitation
     boolean existsByEmailAndGroupIdAndIsUsedTrue(String email, Long groupId);
 
     //주어진 토큰과 소프트 삭제되지 않은 상태의 초대를 조회
-    Optional<GroupInvitation> findByTokenAndIsDeletedFalse(String token);
+    Optional<GroupInvitation> findByGroupTokenAndIsDeletedFalse(String groupToken);
 
     //주어진 ID와 소프트 삭제되지 않은 상태의 초대를 조회
     Optional<GroupInvitation> findByIdAndIsDeletedFalse(Long id);

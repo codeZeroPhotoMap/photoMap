@@ -13,6 +13,8 @@ import com.codeZero.photoMap.dto.group.response.GroupResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -188,9 +190,9 @@ public class GroupService {
         }
 
         //고유 초대 토큰 생성 및 초대 객체 빌더 사용
-        String token = UUID.randomUUID().toString();
+        String groupToken = UUID.randomUUID().toString();
         GroupInvitation invitation = GroupInvitation.builder()
-                .token(token)
+                .groupToken(groupToken)
                 .email(email)
                 .groupId(groupId)
                 .expiryDate(LocalDateTime.now().plusDays(1))
@@ -198,11 +200,14 @@ public class GroupService {
 
         groupInvitationRepository.save(invitation);
 
-        //수락 링크 생성
-//        String acceptLink = "http://localhost:8080/api/members/login?redirect=/api/invitations/accept&token=" + token;
-//        String acceptLink = "http://localhost:8080/api/invitations/accept?token=" + token;
+        //그룹 이름 가져오기
+        String groupName = group.getGroupName();
+        //그룹 이름이 한글이름, 특수문자가 있을 수 있기 때문에 인코딩해서 파라미터로 전달
+        String encodedGroupName = URLEncoder.encode(groupName, StandardCharsets.UTF_8);
 
-        String acceptLink = "http://52.79.152.88:8080/api/invitations/accept?token=" + token;
+        //수락 링크 생성
+//        String acceptLink = "http://localhost:8080/api/invitations/accept?groupToken=" + groupToken + "&groupName=" + encodedGroupName;
+        String acceptLink = "http://52.79.152.88:8080/api/invitations/accept?groupToken=" + groupToken + "&groupName=" + encodedGroupName;
 
 
         //초대하는 멤버의 이름(닉네임) 가져오기
@@ -210,16 +215,13 @@ public class GroupService {
                 .orElseThrow(() -> new NotFoundException("초대하는 멤버를 찾을 수 없습니다."));
         String inviterName = inviter.getName();
 
-        //그룹 이름 가져오기
-        String groupName = group.getGroupName();
-
         //초대 토큰 만료 시간 가져오기
         LocalDateTime expiryDate = invitation.getExpiryDate();
 
         //초대 이메일 발송
         emailService.sendInvitationEmail(email, acceptLink, inviterName, groupName, expiryDate);
 
-        return token;
+        return groupToken;
     }
 
     /**
