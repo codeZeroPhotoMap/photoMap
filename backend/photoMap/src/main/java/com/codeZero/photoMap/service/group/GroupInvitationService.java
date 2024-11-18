@@ -25,12 +25,12 @@ public class GroupInvitationService {
 
     /**
      * 초대 수락(그룹에 멤버 추가)
-     * @param token 초대 토큰
+     * @param groupToken 초대 토큰
      * @param memberId  로그인한 멤버Id
      */
     @Transactional
-    public void acceptInvitation(String token, Long memberId) {
-        GroupInvitation invitation = groupInvitationRepository.findByTokenAndIsDeletedFalse(token)
+    public Long acceptInvitation(String groupToken, Long memberId) {
+        GroupInvitation invitation = groupInvitationRepository.findByGroupTokenAndIsDeletedFalse(groupToken)
                 .orElseThrow(() -> new NotFoundException("유효하지 않거나 만료된 초대 토큰입니다."));
 
         if (invitation.isUsed()) {
@@ -74,6 +74,8 @@ public class GroupInvitationService {
                 .build();
         memberGroupMappingRepository.save(mapping);
 
+        //그룹Id 반환
+        return group.getId();
     }
 
 }

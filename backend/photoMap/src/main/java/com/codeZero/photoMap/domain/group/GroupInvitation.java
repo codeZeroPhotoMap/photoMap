@@ -18,7 +18,7 @@ public class GroupInvitation extends BaseEntity {
     private Long id;
 
     @Column(nullable = false)
-    private String token;   //고유 초대 토큰
+    private String groupToken;   //고유 초대 토큰
     @Column(nullable = false)
     private String email;   //초대받는 이메일
     @Column(nullable = false)
@@ -29,9 +29,9 @@ public class GroupInvitation extends BaseEntity {
     private boolean isUsed = false;   //토큰 사용 여부
 
     @Builder
-    private GroupInvitation(Long id, String token, String email, Long groupId, LocalDateTime expiryDate, boolean isUsed) {
+    private GroupInvitation(Long id, String groupToken, String email, Long groupId, LocalDateTime expiryDate, boolean isUsed) {
         this.id = id;
-        this.token = token;
+        this.groupToken = groupToken;
         this.email = email;
         this.groupId = groupId;
         this.expiryDate = expiryDate;

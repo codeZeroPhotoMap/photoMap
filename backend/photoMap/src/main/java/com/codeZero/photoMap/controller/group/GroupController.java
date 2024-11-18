@@ -130,10 +130,10 @@ public class GroupController {
         //현재 사용자가 그룹의 소유자인지 확인
         groupService.verifyGroupOwner(groupId, memberId);
 
-        String token = groupService.createInvitation(request.getEmail(), groupId, memberId);
+        String groupToken = groupService.createInvitation(request.getEmail(), groupId, memberId);
         GroupInvitationResponse response = GroupInvitationResponse.builder()
                 .message("초대장이 성공적으로 발송되었습니다.")
-                .token(token)
+                .groupToken(groupToken)
                 .build();
 
         return ApiResponse.of(HttpStatus.CREATED, response);

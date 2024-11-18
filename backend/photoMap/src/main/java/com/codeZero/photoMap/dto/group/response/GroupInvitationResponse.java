@@ -7,12 +7,12 @@ import lombok.Getter;
 public class GroupInvitationResponse {
 
     private String message;
-    private String token;
+    private String groupToken;
 
     @Builder
-    public GroupInvitationResponse(String message, String token) {
+    public GroupInvitationResponse(String message, String groupToken) {
         this.message = message;
-        this.token = token;
+        this.groupToken = groupToken;
     }
 
 }
