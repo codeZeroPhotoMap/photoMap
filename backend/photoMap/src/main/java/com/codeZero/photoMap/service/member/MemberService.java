@@ -141,23 +141,20 @@ public class MemberService {
             //기존 회원인 경우
             Member member = existingMember.get();
 
-            //탈퇴한 회원인지 확인
-            if (member.isDeleted()) {
-                throw new ForbiddenException("탈퇴한 회원입니다. 로그인이 불가합니다.");
+            //탈퇴한 회원이 아니라면 로그인
+            if (!member.isDeleted()) {
+                //액세스 및 리프레시 토큰 생성
+                String accessToken = jwtTokenProvider.createToken(member.getEmail());
+                String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
+
+                return TokenResponse.builder()
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .build();
             }
+        }
 
-            //액세스 및 리프레시 토큰 생성
-            String accessToken = jwtTokenProvider.createToken(member.getEmail());
-            String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
-
-            return TokenResponse.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .build();
-
-        } else{
-
-            //새로운 회원이라면 더미 비밀번호를 설정하여 DB에 저장
+            //탈퇴한 회원, 새로운 회원이라면 더미 비밀번호를 설정하여 DB에 저장
             String dummyPassword = passwordEncoder.encode(UUID.randomUUID().toString());
 
             Member newMember = Member.builder()
@@ -181,7 +178,6 @@ public class MemberService {
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
                     .build();
-        }
     }
 
     /**

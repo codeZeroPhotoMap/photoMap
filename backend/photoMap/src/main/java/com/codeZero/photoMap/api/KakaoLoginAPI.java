@@ -13,54 +13,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class KakaoLoginAPI {
 
-    //Access Token을 가져오는 메서드
-    public String getAccessToken(String code) {
-        String accessToken = "";
-        String reqURL = "https://kauth.kakao.com/oauth/token";
-
-        try {
-            URL url = new URL(reqURL);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setDoOutput(true);
-
-            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream()))) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("grant_type=authorization_code");
-                sb.append("&client_id=daeded2f3bec1947cd7e5ccce6bb1c78");
-                sb.append("&redirect_uri=http://52.79.152.88:8080/api/members/login/kakao");
-//                sb.append("&redirect_uri=http://localhost:8080/api/members/login/kakao");
-                sb.append("&code=").append(code);
-
-                bw.write(sb.toString());
-                bw.flush();
-            }
-
-            //응답 코드 확인
-            int responseCode = conn.getResponseCode();
-
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-                    String result = br.lines().reduce("", String::concat);
-                    JsonObject element = JsonParser.parseString(result).getAsJsonObject();
-
-                    // Access Token 추출
-                    accessToken = element.get("access_token").getAsString();
-
-                }
-
-            }else {
-                throw new KakaoApiException("카카오 로그인 중 토큰 발급에 실패했습니다.");
-            }
-
-        } catch (IOException e) {
-            throw new KakaoApiException("카카오 로그인 중 오류 발생");
-        }
-
-        return accessToken;
-
-    }
-
     //사용자 정보를 가져오는 메서드
     public KakaoUserInfoResponse getUserInfo(String accessToken) {
 

@@ -207,8 +207,8 @@ public class GroupService {
 
         //수락 링크 생성
 //        String acceptLink = "http://localhost:8080/api/invitations/accept?groupToken=" + groupToken + "&groupName=" + encodedGroupName;
-        String acceptLink = "http://52.79.152.88:8080/api/invitations/accept?groupToken=" + groupToken + "&groupName=" + encodedGroupName;
-
+//        String acceptLink = "http://52.79.152.88:8080/api/invitations/accept?groupToken=" + groupToken + "&groupName=" + encodedGroupName;
+        String acceptLink = "https://goormfinal.vercel.app/invitation?groupToken=" + groupToken + "&groupName=" + encodedGroupName;
 
         //초대하는 멤버의 이름(닉네임) 가져오기
         Member inviter = memberRepository.findByIdAndIsDeletedFalse(memberId)
